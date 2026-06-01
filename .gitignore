@@ -1,0 +1,13 @@
+# Secrets — never commit real credentials
+.env
+.weather_env
+
+# Logs
+*.log
+
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
+
+# Virtual environments (uv creates .venv)
+.venv/

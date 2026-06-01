@@ -1,0 +1,9 @@
+[project]
+name = "weather-notifier"
+version = "0.1.0"
+description = "Daily Telegram weather + clothing notifier for Raspberry Pi"
+requires-python = ">=3.9"
+dependencies = [
+    "requests>=2.31",
+    "python-dotenv>=1.0",
+]
