@@ -16,6 +16,8 @@ only handles the weather logic and message formatting.
 from datetime import datetime, timedelta
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 import telegram_notifier
 
@@ -52,13 +54,35 @@ HOURLY_VARS = (
 )
 TIMEOUT = 15
 
+# Retry transient failures (open-meteo occasionally returns 5xx / 429, and the
+# Pi's network can blip). Exponential backoff: 1s, 2s, 4s between 5 attempts.
+RETRY_TOTAL = 4
+RETRY_BACKOFF = 1
+RETRY_STATUSES = (429, 500, 502, 503, 504)
+
+
+def _session():
+    """A requests Session that retries transient errors with backoff."""
+    retry = Retry(
+        total=RETRY_TOTAL,
+        backoff_factor=RETRY_BACKOFF,
+        status_forcelist=RETRY_STATUSES,
+        allowed_methods=("GET",),
+        raise_on_status=False,  # let raise_for_status() report the final code
+    )
+    session = requests.Session()
+    session.mount("https://", HTTPAdapter(max_retries=retry))
+    return session
+
 
 # === Forecast retrieval =====================================================
 
 def fetch_forecast():
     """Fetch the hourly forecast object from Open-Meteo.
 
-    Raises requests.RequestException on network/API failure (captured by cron).
+    Transient 5xx/429 responses and connection blips are retried with backoff
+    before giving up. Raises requests.RequestException if all attempts fail
+    (captured by cron / the log file).
     """
     params = {
         "latitude": LATITUDE,
@@ -67,7 +91,7 @@ def fetch_forecast():
         "timezone": TIMEZONE,
         "forecast_days": DAY_OFFSET + 1,
     }
-    response = requests.get(API_URL, params=params, timeout=TIMEOUT)
+    response = _session().get(API_URL, params=params, timeout=TIMEOUT)
     response.raise_for_status()
     return response.json()["hourly"]
 
