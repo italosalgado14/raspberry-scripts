@@ -1,0 +1,17 @@
+[project]
+name = "calendar-report"
+version = "0.1.0"
+description = "Weekly Google Calendar report delivered to Telegram and/or email, for Raspberry Pi"
+requires-python = ">=3.9"
+dependencies = [
+    "requests>=2.31",
+    "python-dotenv>=1.0",
+    "google-api-python-client>=2.100",
+    "google-auth>=2.23",
+    "tzdata>=2024.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]

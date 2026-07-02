@@ -1,0 +1,16 @@
+# Secrets — never commit real credentials
+.env
+service-account.json
+credentials*.json
+*.pem
+
+# Logs
+*.log
+
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environments (uv creates .venv)
+.venv/
