@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# t — create-or-attach tmux sessions by name.
+#
+#   t                  list sessions
+#   t NAME             attach to NAME, creating it first if needed
+#   t NAME 'COMMAND'   create NAME detached running COMMAND (no-op if it exists)
+set -euo pipefail
+
+if [ $# -eq 0 ]; then
+    tmux ls 2>/dev/null || echo "no sessions"
+    exit 0
+fi
+
+name=$1
+cmd=${2:-}
+
+if tmux has-session -t "$name" 2>/dev/null; then
+    [ -n "$cmd" ] && { echo "session '$name' already exists, ignoring command"; }
+    exec tmux attach -t "$name"
+fi
+
+if [ -n "$cmd" ]; then
+    tmux new-session -d -s "$name" "$cmd"
+    echo "started '$name' (detached): $cmd"
+else
+    exec tmux new-session -s "$name"
+fi
